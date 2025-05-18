@@ -68,7 +68,6 @@ export class MoviesService {
       return await this.movieRepository.save(movie)
     }
     catch (error: any) {
-      // throw new BadRequestException(error.detail);
       throw new BadRequestException(`Error happened: ${error}`)
     }
   }
