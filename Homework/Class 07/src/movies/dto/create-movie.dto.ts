@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString, Length } from "class-validator";
+import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString, Min, Max } from "class-validator";
 import { Genre } from "src/types/genre.enum";
 
 export class CreateMovieDto {
@@ -46,6 +46,8 @@ export class CreateMovieDto {
 
     @IsNumber()
     @IsPositive()
+    @Min(1)
+    @Max(10)
     @IsNotEmpty()
     @ApiProperty({
         type: Number,
