@@ -2,9 +2,10 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Query, HttpCode } fr
 import { MoviesService } from './movies.service';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
-import { ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiCreatedResponse, ApiOperation, ApiTags, ApiOkResponse } from '@nestjs/swagger';
 import { Movie } from './movie.entity';
 import { MovieQueryDto } from './dto/query-movie.dto';
+import { PaginatedResponseDto } from './dto/paginated-response.dto';
 
 @ApiTags('Movies')
 @Controller('movies')
@@ -15,8 +16,12 @@ export class MoviesController {
   @ApiOperation({
     summary: 'Search movies'
   })
-  async search(@Query() query: MovieQueryDto): Promise<Movie[]> {
-    return await this.moviesService.search(query)
+  @ApiOkResponse({
+    type: PaginatedResponseDto<Movie>,
+    description: 'Filtered, paginated, and sorted movies',
+  })
+  search (@Query() query: MovieQueryDto): Promise<PaginatedResponseDto<Movie>> {
+    return this.moviesService.search(query)
   }
 
   @Get('/:id')
@@ -44,9 +49,7 @@ export class MoviesController {
     summary: 'Update movie'
   })
   async update(@Param('id') id: string, @Body() body: UpdateMovieDto): Promise<Movie> {
-    await this.moviesService.update(id, body);
-
-    return this.moviesService.findOne(id)
+     return await this.moviesService.update(id, body);
   }
 
   @Delete('/:id')

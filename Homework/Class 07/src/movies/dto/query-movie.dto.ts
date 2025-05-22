@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsString, IsNotEmpty, IsOptional, IsNumber, IsEnum } from "class-validator";
+import { IsString, IsNotEmpty, IsOptional, IsNumber, IsEnum, IsInt } from "class-validator";
 import { Genre } from "src/types/genre.enum";
 import { Sort, Order } from "src/types/sort-and-order.enum";
 
@@ -11,7 +11,7 @@ export class MovieQueryDto {
     @ApiPropertyOptional({
         enum: Genre,
     })
-    genre? : Genre
+    genre?: Genre
 
     @IsNumber()
     @Type(() => Number)
@@ -21,7 +21,7 @@ export class MovieQueryDto {
         minimum: 1,
         maximum: 10,
     })
-    minRating? : number;
+    minRating?: number;
 
     @IsNumber()
     @Type(() => Number)
@@ -29,7 +29,7 @@ export class MovieQueryDto {
     @ApiPropertyOptional({
         type: Number,
     })
-    maxDuration? : number;
+    maxDuration?: number;
 
     @IsString()
     @IsNotEmpty()
@@ -37,7 +37,7 @@ export class MovieQueryDto {
     @ApiPropertyOptional({
         type: String,
     })
-    title? : string;
+    title?: string;
 
     @IsEnum(Sort)
     @IsOptional()
@@ -45,7 +45,7 @@ export class MovieQueryDto {
         enum: Sort,
         default: Sort.ReleaseYear
     })
-    sortBy? : Sort;
+    sortBy?: Sort;
 
     @IsEnum(Order)
     @IsOptional()
@@ -53,5 +53,23 @@ export class MovieQueryDto {
         enum: Order,
         default: Order.DESC,
     })
-    orderBy? : Order;
+    orderBy?: Order;
+
+    @IsInt()
+    @IsOptional()
+    @Type(() => Number)
+    @ApiPropertyOptional({
+        type: Number,
+        default: 1,
+    })
+    page?: number = 1;
+
+    @IsInt()
+    @IsOptional()
+    @Type(() => Number)
+    @ApiPropertyOptional({
+        type: Number,
+        default: 5,
+    })
+    pageSize?: number = 5;
 }

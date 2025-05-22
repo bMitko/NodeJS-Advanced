@@ -6,6 +6,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MovieQueryDto } from './dto/query-movie.dto';
 import { Sort, Order } from 'src/types/sort-and-order.enum';
+import { PaginatedResponseDto } from './dto/paginated-response.dto';
 
 
 @Injectable()
@@ -15,14 +16,16 @@ export class MoviesService {
     private readonly movieRepository: Repository<Movie>,
   ) { }
 
-  search({
+  async search({
     genre,
     minRating,
     maxDuration,
     title,
     sortBy,
-    orderBy
-  }: MovieQueryDto): Promise<Movie[]> {
+    orderBy,
+    page = 1,
+    pageSize = 5
+  }: MovieQueryDto): Promise<PaginatedResponseDto<Movie>> {
     let query = this.movieRepository.createQueryBuilder('movie')
 
     if (genre) {
@@ -46,8 +49,25 @@ export class MoviesService {
 
     query.orderBy(`movie.${sort}`, order)
 
+    const skip = (page - 1) * pageSize;
 
-    return query.getMany()
+    query.skip(skip).take(pageSize);
+
+    const [movies, total] = await query.getManyAndCount();
+
+    if (movies.length === 0) {
+      let pageNumber = total / pageSize
+      if (pageNumber % 1 !== 0) {
+        pageNumber = Math.floor(pageNumber) + 1
+      }
+
+      throw new BadRequestException(`If you want to display ${pageSize} movies per page, there are only ${pageNumber} pages `)
+    }
+
+    return {
+      payload: movies,
+      total
+    };
   }
 
   async findOne(id: string): Promise<Movie> {
@@ -73,17 +93,33 @@ export class MoviesService {
   }
 
   async update(id: string, body: UpdateMovieDto): Promise<Movie> {
-    const movie = await this.findOne(id)
+    await this.movieRepository
+      .createQueryBuilder()
+      .update(Movie)
+      .set(body)
+      .where('id = :id', { id })
+      .execute();
 
-    const updatedMovie = {
-      ...movie,
-      ...body
-    }
+    const movie = await this.movieRepository
+      .createQueryBuilder()
+      .where('id = :id', { id })
+      .getOne();
 
-    return this.movieRepository.save(updatedMovie)
+    if (!movie) {
+      throw new NotFoundException(`You can't update movie that doesn't exist.`,)
+    };
+
+    return movie;
   }
 
   async delete(id: string): Promise<void> {
+    const movie = await this.movieRepository.findOneBy({
+      id,
+    });
+
+    if (!movie) {
+      throw new NotFoundException(`You can't delete non existing movie`)
+    }
     await this.movieRepository.delete(id)
   }
 }
